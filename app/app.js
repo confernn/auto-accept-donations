@@ -83,7 +83,7 @@ function process(offer) {
 
 // If a new offer is received; proccess it 
 manager.on('newOffer', (offer) => {
-    print(`\n${log('trade')} (${offer.id.yellow}) We recieved a new offer. Trade was sent by ${offer.partner.getSteamID64().yellow}`);
+    print(`\n${log('trade')} (${offer.id.yellow}) We recieved a new offer. Trade is being sent by ${offer.partner.getSteamID64().yellow}`);
     process(offer);
 });
 
