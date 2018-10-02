@@ -39,8 +39,6 @@ function log(info) {
         ${info == "info" ? info.green : ""}+
         ${info == "trade" ? info.magenta : ""}+
         ${info == "warn" ? info.yellow : ""};
-    
-    
 }
 
 // When user has logged on, log and check if he/she is in the group he/she wants to invite to
