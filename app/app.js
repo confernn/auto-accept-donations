@@ -38,7 +38,7 @@ function log(info) {
     return `${package.name} |`.green + moment().format('LTS')+` `+
         ${info == "info" ? info.green : ""}+
         ${info == "trade" ? info.magenta : ""}+
-        ${info == "warm" ? info.yellow : ""};
+        ${info == "warn" ? info.yellow : ""};
     
     
 }
