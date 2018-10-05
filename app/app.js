@@ -36,10 +36,10 @@ const logOnOptions = {
 client.logOn(logOnOptions);
 
 function log(info) {
-    return `${package.name} |`.green + moment().format('LTS')+` `+
-        ${info == "info" ? info.green : ""}+
-        ${info == "trade" ? info.magenta : ""}+
-        ${info == "warn" ? info.yellow : ""};
+    return `${package.name} | `.green + moment().format('LTS')+' '+
+        `${info == "info" ? info.green : ""}`+
+        `${info == "trade" ? info.magenta : ""}`+
+        `${info == "warn" ? info.yellow : ""}:`; 
 }
 
 // When user has logged on, log and check if he/she is in the group he/she wants to invite to
