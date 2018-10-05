@@ -37,9 +37,9 @@ client.logOn(logOnOptions);
 
 function log(info) {
     return `${package.name} | `.green + moment().format('LTS')+' '+
-        `${info == "info" ? info.green : ""}`+
-        `${info == "trade" ? info.magenta : ""}`+
-        `${info == "warn" ? info.yellow : ""}:`; 
+    `${info == "info" ? info.green : ""}`+
+    `${info == "trade" ? info.magenta : ""}`+
+    `${info == "warn" ? info.yellow : ""}:`; 
 }
 
 // When user has logged on, log and check if he/she is in the group he/she wants to invite to
@@ -56,6 +56,35 @@ client.on('loggedOn', (details, parental) => {
             client.gamesPlayed([package.name]);
         setTimeout(verify, 1000);   
     });
+});
+
+// Auto-accept friend requests
+client.on('friendRelationship', (steamID, relationship) => {
+    if(relationship == 2) {
+        info = 'info';
+        client.getPersonas([steamID], (personas) => {
+            let name;
+            var persona = personas[steamID.getSteamID64()];
+            name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
+            if(config.optional.friends.autoAccept == true) {
+                client.getSteamLevels([steamID], function(results) {
+                    if(config.optional.friends.requiredLevel > results[steamID.getSteamID64()]) 
+                    print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
+                else 
+                    client.addFriend(steamID);
+                    print(`${log(info)} I'm now friends with ${name}, their level: ${results[steamID.getSteamID64()]}`);
+                    if(config.optional.friends.welcomeMessage)
+                        if(config.optional.friends.welcomeMessage.indexOf('%name%') > -1) {
+                            client.chatMessage(steamID, config.optional.friends.welcomeMessage.replace('%name%', name));
+                            print(`${log(info)} I sent a welcome message to ${name.yellow}: ${config.optional.friends.welcomeMessage.replace('%name%', name)}`);
+                        } else {
+                            client.chatMessage(steamID, config.optional.friends.welcomeMessage);
+                            print(`${log(info)} I sent a welcome message to ${name.yellow}: ${config.optional.friends.welcomeMessage}`);
+                        }
+                });
+            }
+        })
+    }
 });
 
 client.on('webSession', (sessionid, cookies) => {
