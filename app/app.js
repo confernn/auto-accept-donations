@@ -36,10 +36,8 @@ const logOnOptions = {
 client.logOn(logOnOptions);
 
 function log(info) {
-    return `${package.name} | `.green + moment().format('LTS')+' '+
-    `${info == "info" ? info.green : ""}`+
-    `${info == "trade" ? info.magenta : ""}`+
-    `${info == "warn" ? info.yellow : ""}:`; 
+    return `${package.name} | `.green + `${moment().format('LTS')} `+
+    `${info == "info" ? info.green : ""+info == "trade" ? info.magenta : ""+info == "warn" ? info.yellow : ""}:`
 }
 
 // When user has logged on, log and check if he/she is in the group he/she wants to invite to
@@ -50,11 +48,11 @@ client.on('loggedOn', (details, parental) => {
         print(`${log(info)} You're currently running ${package.name} on version ${package.version.green}`);
         print(`${log(info)} Logged into Steam as ${personas[client.steamID].player_name.green}`);
         client.setPersona(SteamUser.Steam.EPersonaState.Online);
-        if(config.optional.game != 0)
-            client.gamesPlayed([config.optional.game]);
+        if(config.optional.game)
+            client.gamesPlayed([package.name, config.optional.game]);
         else
-            client.gamesPlayed([package.name]);
-        setTimeout(verify, 1000);   
+            client.gamesPlayed(package.name);
+        setTimeout(verify, 1000);  
     });
 });
 
@@ -63,31 +61,31 @@ client.on('friendRelationship', (steamID, relationship) => {
     if(relationship == 2) {
         info = 'info';
         client.getPersonas([steamID], (personas) => {
-            let name;
+            const path = config.optional.friends;
             var persona = personas[steamID.getSteamID64()];
-            name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
-            if(config.optional.friends.autoAccept == true) {
+            let name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
+            if(path.autoAccept) {
                 client.getSteamLevels([steamID], function(results) {
-                    if(config.optional.friends.requiredLevel > results[steamID.getSteamID64()]) 
-                    print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
-                else 
-                    client.addFriend(steamID);
-                    print(`${log(info)} I'm now friends with ${name}, their level: ${results[steamID.getSteamID64()]}`);
-                    if(config.optional.friends.welcomeMessage)
-                        if(config.optional.friends.welcomeMessage.indexOf('%name%') > -1) {
-                            client.chatMessage(steamID, config.optional.friends.welcomeMessage.replace('%name%', name));
-                            print(`${log(info)} I sent a welcome message to ${name.yellow}: ${config.optional.friends.welcomeMessage.replace('%name%', name)}`);
-                        } else {
-                            client.chatMessage(steamID, config.optional.friends.welcomeMessage);
-                            print(`${log(info)} I sent a welcome message to ${name.yellow}: ${config.optional.friends.welcomeMessage}`);
-                        }
+                    if(path.requiredLevel > results[steamID.getSteamID64()]) 
+                        print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
+                    else 
+                        client.addFriend(steamID);
+                        print(`${log(info)} I'm now friends with ${name}, their level: ${results[steamID.getSteamID64()]}`);
+                        if(path.welcomeMessage)
+                            if(path.welcomeMessage.indexOf('%name%') > -1) {
+                                client.chatMessage(steamID, path.welcomeMessage.replace('%name%', name));
+                                print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage.replace('%name%', name)}`);
+                            }
+                            else                            
+                                client.chatMessage(steamID, path.welcomeMessage);
+                                print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage}`);
                 });
             }
-        })
+        });
     }
 });
 
-client.on('webSession', (sessionid, cookies) => {
+client.on('webSession', (session, cookies) => {
     manager.setCookies(cookies);
     community.setCookies(cookies);
 });
@@ -97,7 +95,7 @@ function accept(offer) {
     offer.accept((err) => {
         if(err) {
             print(`${log('warn')} (${offer.id.yellow}) Error while trying to accept donation. ${err.red}`);
-        } 
+        }
         print(`${log('trade')} (${offer.id.yellow}) Trying to accept incoming donation.`);
     })
 }
@@ -106,7 +104,7 @@ function accept(offer) {
 function process(offer) {
     if(offer.itemsToGive.length === 0 && offer.itemsToReceive.length > 0) 
         accept(offer);
-    else 
+    else
         print(`${log('trade')} (${offer.id.yellow})`+' Incoming offer is not a donation, offer ignored.'.yellow);
 }
 
@@ -133,7 +131,8 @@ manager.on('receivedOfferChanged', (offer, oldState) => {
                             print(`${log('info')} (${offer.id.yellow}) Incoming offer partner is not listed blacklist, trying to leave a comment.`);
                             community.postUserComment(offer.partner.getSteam3RenderedID(), config.optional.comment);
                         }
-                    } else 
+                    } 
+                    else 
                         community.postUserComment(offer.partner.getSteam3RenderedID(), config.optional.comment);
                 }
                 if(config.optional.inviteToGroup) {
@@ -159,10 +158,9 @@ manager.on('receivedOfferChanged', (offer, oldState) => {
 
 // Function that verifies that the user is in the group he/she wants to invite to
 function verify() {
-    if(config.optional.groupURL) {
+    if(config.optional.groupURL)
         community.getSteamGroup(config.optional.groupURL, (err, group) => {
             if(!err) 
-                group.join(); 
-        })
-    }
+                group.join();
+    })
 }
