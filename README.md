@@ -11,6 +11,8 @@
 #
 # Features
 * Accept donations and orders automatically (if there's no items on your side)
+* Automatically accept friend requests
+* Ability to set a minimum level required for friend request(s) to be accepted
 * Ability to automatically send a custom message to the donator
 * Ability to automatically post a custom comment to the donator
 * Ability to blacklist specific users to ignore leaving comment(s) on their profile
