@@ -16,6 +16,11 @@
 		"enableBlacklist": true,
 		"inviteToGroup": true,
 		"message": "Thanks for donating to me!",
-		"comment": "+rep donated to me, thanks!"
+		"comment": "+rep donated to me, thanks!",
+		"friends": {
+			"autoAccept": true,
+			"requiredLevel": 2,
+			"welcomeMessage": "Thanks for adding me %name%!"
+		}
 	}
 }
