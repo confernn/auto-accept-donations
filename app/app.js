@@ -147,6 +147,7 @@ manager.on('receivedOfferChanged', (offer, oldState) => {
                 }
             }
         }
+        info = 'trade';
         if(offer.state === TradeOfferManager.ETradeOfferState.Declined) print(`${log(info)} (${offer.id.yellow})`+' You declined your incoming offer.'.red);
         if(offer.state === TradeOfferManager.ETradeOfferState.Canceled) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer was canceled by sender.'.red);
         if(offer.state === TradeOfferManager.ETradeOfferState.Invalid) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now invalid.'.yellow);
