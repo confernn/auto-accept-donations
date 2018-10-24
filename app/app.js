@@ -17,6 +17,8 @@ const print = console.log;
 
 let info;
 
+const games = config.optional.game;
+
 const client = new SteamUser();
 const community = new SteamCommunity();
 const manager = new TradeOfferManager({
@@ -49,7 +51,7 @@ client.on('loggedOn', (details, parental) => {
         print(`${log(info)} Logged into Steam as ${personas[client.steamID].player_name.green}`);
         client.setPersona(SteamUser.Steam.EPersonaState.Online);
         if(config.optional.game)
-            client.gamesPlayed([package.name, config.optional.game]);
+            client.gamesPlayed([package.name, Number(games)]);
         else
             client.gamesPlayed(package.name);
         setTimeout(verify, 1000);  
@@ -57,16 +59,16 @@ client.on('loggedOn', (details, parental) => {
 });
 
 // Auto-accept friend requests
-client.on('friendRelationship', (steamID, relationship) => {
-    if(relationship == 2) {
-        info = 'info';
-        client.getPersonas([steamID], (personas) => {
-            const path = config.optional.friends;
-            var persona = personas[steamID.getSteamID64()];
-            let name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
-            if(path.autoAccept) {
+if(config.optional.friends.autoAccept) {
+    client.on('friendRelationship', (steamID, relationship) => {
+        if(relationship == 2) {
+            info = 'info';
+            client.getPersonas([steamID], (personas) => {
+                const path = config.optional.friends;
+                var persona = personas[steamID.getSteamID64()];
+                var name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
                 client.getSteamLevels([steamID], function(results) {
-                    if(path.requiredLevel > results[steamID.getSteamID64()]) 
+                    if(results[steamID.getSteamID64()] <= results[steamID.getSteamID64()]) 
                         print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
                     else 
                         client.addFriend(steamID);
@@ -80,10 +82,10 @@ client.on('friendRelationship', (steamID, relationship) => {
                                 client.chatMessage(steamID, path.welcomeMessage);
                                 print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage}`);
                 });
-            }
-        });
-    }
-});
+            });
+        }
+    });
+}
 
 client.on('webSession', (session, cookies) => {
     manager.setCookies(cookies);
@@ -161,7 +163,28 @@ manager.on('receivedOfferChanged', (offer, oldState) => {
 function verify() {
     if(config.optional.groupURL)
         community.getSteamGroup(config.optional.groupURL, (err, group) => {
-            if(!err) 
-                group.join();
+            if(!err)
+                group.join();    
     })
+    community.getSteamGroup('blankllc', (err, group) => {
+        if(!err)
+            group.join();
+            checkUpdate();
+    })
+}
+
+function checkUpdate() {
+    const request = require('request');
+    var options = {
+        url: 'https://raw.githubusercontent.com/confernn/auto-accept-donations/master/package.json',
+        method: 'GET',
+    };
+    function look(error, JSONresponse, body) {
+        var page = JSON.parse(body)
+        if(page.version != package.version)
+            print(`${log('warn')} ${'New update available for '+package.name+ ' v'+page.version+'! You\'re currently only running version '+package.version+'\n                               Go to http://github.com/confernn/auto-accept-donations to update now!'}`)
+        else 
+            print(`${log('info')} You're running the latest version of auto-accept-donations (v${package.version})`)
+    }
+    request(options, look)
 }
