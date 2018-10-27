@@ -17,8 +17,6 @@ const print = console.log;
 
 let info;
 
-const games = config.optional.game;
-
 const client = new SteamUser();
 const community = new SteamCommunity();
 const manager = new TradeOfferManager({
@@ -51,10 +49,10 @@ client.on('loggedOn', (details, parental) => {
         print(`${log(info)} Logged into Steam as ${personas[client.steamID].player_name.green}`);
         client.setPersona(SteamUser.Steam.EPersonaState.Online);
         if(config.optional.game)
-            client.gamesPlayed([package.name, Number(games)]);
+            client.gamesPlayed(config.optional.game);
         else
             client.gamesPlayed(package.name);
-        setTimeout(verify, 1000);  
+        setTimeout(verify, 1000);
     });
 });
 
