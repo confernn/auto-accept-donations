@@ -85,7 +85,7 @@ if(config.optional.friends.autoAccept) {
     });
 }
 
-client.on('webSession', (session, cookies) => {
+client.on('webSession', (sessionid, cookies) => {
     manager.setCookies(cookies);
     community.setCookies(cookies);
 });
@@ -180,7 +180,7 @@ function checkUpdate() {
     function look(error, JSONresponse, body) {
         var page = JSON.parse(body)
         if(page.version != package.version)
-            print(`${log('warn')} ${'New update available for '+package.name+ ' v'+page.version+'! You\'re currently only running version '+package.version+'\n                               Go to http://github.com/confernn/auto-accept-donations to update now!'}`)
+            print(`${log('warn')} ${'New update available for '+package.name+ ' v'+page.version+'! You\'re currently only running version '+package.version+''}\n${`${log('info')} Go to http://github.com/confernn/auto-accept-donations to update now!`}`)
         else 
             print(`${log('info')} You're running the latest version of auto-accept-donations (v${package.version})`)
     }
