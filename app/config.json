@@ -7,7 +7,7 @@
 	"optional": {
 		"sharedSecret": "SHAREDSECRET=",
 		"persona": "Online",
-		"game": 440,
+		"game": ["auto-accept-donations", 440, 730, 735],
 		"groupURL":"https://steamcommunity.com/groups/blankllc",
 		"groupID": 103582791440562795,
 		"clock": "en",
