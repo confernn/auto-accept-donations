@@ -10,7 +10,8 @@
 
 #
 # Features
-* Accept donations and orders automatically (if there's no items on your side)
+* Accept donations and orders automatically (if there's no items on your side)'
+* Idle multiple Steam-games easily
 * Automatically accept friend requests
 * Ability to set a minimum level required for friend request(s) to be accepted
 * Ability to automatically send a custom message to the donator
