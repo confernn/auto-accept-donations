@@ -56,9 +56,8 @@ client.on('loggedOn', (details, parental) => {
     });
 });
 
-// Auto-accept friend requests
-if(config.optional.friends.autoAccept) {
-    client.on('friendRelationship', (steamID, relationship) => {
+client.on('friendRelationship', (steamID, relationship) => {
+    if(config.optional.friends.autoAccept) {
         if(relationship == 2) {
             info = 'info';
             client.getPersonas([steamID], (personas) => {
@@ -66,24 +65,26 @@ if(config.optional.friends.autoAccept) {
                 var persona = personas[steamID.getSteamID64()];
                 var name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
                 client.getSteamLevels([steamID], function(results) {
-                    if(results[steamID.getSteamID64()] <= results[steamID.getSteamID64()]) 
+                    if(results[steamID.getSteamID64()] < Math.floor(config.optional.friends.requiredLevel + 1))
                         print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
-                    else 
+                    else {
                         client.addFriend(steamID);
                         print(`${log(info)} I'm now friends with ${name}, their level: ${results[steamID.getSteamID64()]}`);
-                        if(path.welcomeMessage)
+                        if(path.welcomeMessage) {
                             if(path.welcomeMessage.indexOf('%name%') > -1) {
                                 client.chatMessage(steamID, path.welcomeMessage.replace('%name%', name));
-                                print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage.replace('%name%', name)}`);
                             }
                             else                            
                                 client.chatMessage(steamID, path.welcomeMessage);
-                                print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage}`);
+                            
+                            print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage.replace('%name%', name)}`);
+                        }
+                    }
                 });
             });
         }
-    });
-}
+    }
+});
 
 client.on('webSession', (sessionid, cookies) => {
     manager.setCookies(cookies);
