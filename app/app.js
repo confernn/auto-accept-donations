@@ -65,9 +65,7 @@ client.on('friendRelationship', (steamID, relationship) => {
                 var persona = personas[steamID.getSteamID64()];
                 var name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
                 client.getSteamLevels([steamID], function(results) {
-                    if(results[steamID.getSteamID64()] < Math.floor(config.optional.friends.requiredLevel + 1))
-                        print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
-                    else {
+                    if(results[steamID.getSteamID64()] >= config.optional.friends.requiredLevel) {
                         client.addFriend(steamID);
                         print(`${log(info)} I'm now friends with ${name}, their level: ${results[steamID.getSteamID64()]}`);
                         if(path.welcomeMessage) {
@@ -79,7 +77,9 @@ client.on('friendRelationship', (steamID, relationship) => {
                             
                             print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage.replace('%name%', name)}`);
                         }
-                    }
+                    } 
+                    else
+                        print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
                 });
             });
         }
