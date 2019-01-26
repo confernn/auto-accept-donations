@@ -1,9 +1,9 @@
 # auto-accept-donations
 
-![Version](https://img.shields.io/github/package-json/v/confernn/auto-accept-donations.svg)
-[![License](https://img.shields.io/github/license/confernn/auto-accept-donations.svg)](https://github.com/confernn/auto-accept-donations/blob/master/LICENSE)
-[![Stars](https://img.shields.io/github/stars/confernn/auto-accept-donations.svg)](https://github.com/confernn/auto-accept-donations/stargazers)
-[![Issues](https://img.shields.io/github/issues/confernn/auto-accept-donations.svg)](https://github.com/confernn/auto-accept-donations/issues)
+![Version](https://img.shields.io/github/package-json/v/offish/auto-accept-donations.svg)
+[![License](https://img.shields.io/github/license/offish/auto-accept-donations.svg)](https://github.com/offish/auto-accept-donations/blob/master/LICENSE)
+[![Stars](https://img.shields.io/github/stars/offish/auto-accept-donations.svg)](https://github.com/offish/auto-accept-donations/stargazers)
+[![Issues](https://img.shields.io/github/issues/offish/auto-accept-donations.svg)](https://github.com/offish/auto-accept-donations/issues)
 [![Discord](https://img.shields.io/discord/467040686982692865.svg)](https://discord.gg/t8nHSvA)
 
 **Free, secure and fast customizable script that automatically accepts donations on Steam with a lot of options.**
