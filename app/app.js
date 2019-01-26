@@ -1,6 +1,6 @@
 /* 
 Script developed and maintained by confern
-Running an old version of the script? Updates can be found here: https://github.com/confernn/auto-accept-donations
+Running an old version of the script? Updates can be found here: https://github.com/offish/auto-accept-donations
 */
 
 const TradeOfferManager = require('steam-tradeoffer-manager')
@@ -175,7 +175,7 @@ function verify() {
 function checkUpdate() {
     const request = require('request');
     var options = {
-        url: 'https://raw.githubusercontent.com/confernn/auto-accept-donations/master/package.json',
+        url: 'https://raw.githubusercontent.com/offish/auto-accept-donations/master/package.json',
         method: 'GET',
     };
     function look(error, JSONresponse, body) {
