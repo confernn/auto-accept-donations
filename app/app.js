@@ -13,7 +13,9 @@ const colors = require('colors');
 const blacklist = require('./blacklist.json');
 const package = require('./../package.json');
 const config = require('./config.json');
+const auto = require('./methods')
 const print = console.log;
+
 
 let info;
 
@@ -35,23 +37,13 @@ const logOnOptions = {
 
 client.logOn(logOnOptions);
 
-function log(info) {
-    return `${package.name} | `.green + `${moment().format('LTS')} `+
-    `${info == "info" ? info.green : ""+info == "trade" ? info.magenta : ""+info == "warn" ? info.yellow : ""}:`
-}
-
 // When user has logged on, log and check if he/she is in the group he/she wants to invite to
 client.on('loggedOn', (details, parental) => {
     client.getPersonas([client.steamID], (personas) => {
+        auto.start(personas[client.steamID].player_name)
         info = 'info';
-        print('\033c');
-        print(`${log(info)} You're currently running ${package.name} on version ${package.version.green}`);
-        print(`${log(info)} Logged into Steam as ${personas[client.steamID].player_name.green}`);
         client.setPersona(SteamUser.Steam.EPersonaState.Online);
-        if(config.optional.game)
-            client.gamesPlayed(config.optional.game);
-        else
-            client.gamesPlayed(package.name);
+        client.gamesPlayed(auto.games());
         setTimeout(verify, 1000);
     });
 });
@@ -103,7 +95,7 @@ function accept(offer) {
 
 // Function that processes the offer, if the offer is a donation; accept it, else log it in console
 function process(offer) {
-    if(offer.itemsToGive.length === 0 && offer.itemsToReceive.length > 0) 
+    if(auto.isDonation(offer)) 
         accept(offer);
     else
         print(`${log('trade')} (${offer.id.yellow})`+' Incoming offer is not a donation, offer ignored.'.yellow);
@@ -118,43 +110,39 @@ manager.on('newOffer', (offer) => {
 // If offer changed it's state; do something
 manager.on('receivedOfferChanged', (offer, oldState) => {
     setTimeout(() => {
+        info = 'trade';
         if(offer.state === TradeOfferManager.ETradeOfferState.Accepted) {
-            print(`${log('trade')} (${offer.id.yellow})`+' Incoming offer went through successfully.'.green);
-            if(offer.itemsToGive.length === 0) {
-                if(config.optional.enableMessages) {
-                    client.chatMessage(offer.partner.getSteam3RenderedID(), config.optional.message);
+            print(`${log(info)} (${offer.id.yellow})`+' Incoming offer went through successfully.'.green);
+            if(auto.isDonation(offer)) {
+                let id64 = offer.partner.getSteamID64();
+                let id3 = offer.partner.getSteam3RenderedID();
+                if(auto.messagesEnabled()) {
+                    client.chatMessage(id3, config.optional.message);
                 }
-                if(config.optional.enableComments) {
-                    if(config.optional.enableBlacklist) {
-                        if(blacklist.includes(Number(offer.partner.getSteamID64()))) 
+                if(auto.inviteEnabled()) {
+                    client.addFriend(id3)
+                    community.inviteUserToGroup(id3, config.optional.groupID);
+                }
+                if(auto.enableComments()) {
+                    if(auto.blacklistEnabled()) {
+                        if(auto.isBlacklisted(id64)) 
                             print(`${log('info')} (${offer.id.yellow})`+' Incoming offer partner is listed in blacklist, not leaving a comment.'.yellow);
-                        else {
+                        else
                             print(`${log('info')} (${offer.id.yellow}) Incoming offer partner is not listed blacklist, trying to leave a comment.`);
-                            community.postUserComment(offer.partner.getSteam3RenderedID(), config.optional.comment);
-                        }
-                    } 
-                    else 
-                        community.postUserComment(offer.partner.getSteam3RenderedID(), config.optional.comment);
-                }
-                if(config.optional.inviteToGroup) {
-                    client.addFriend(offer.partner.getSteam3RenderedID()); {
-                        if(config.optional.groupID > 0) {
-                            community.inviteUserToGroup(offer.partner.getSteam3RenderedID(), config.optional.groupID);
-                        }
+                    
                     }
+                    community.postUserComment(id3, config.optional.comment)
                 }
-                if(!config.optional.enableComments) {
+                else if(!auto.commentsEnabled()) 
                     print(`${log('info')}`+' Comments are disabled, not leaving a comment.'.green);
-                }
             }
         }
-        info = 'trade';
-        if(offer.state === TradeOfferManager.ETradeOfferState.Declined) print(`${log(info)} (${offer.id.yellow})`+' You declined your incoming offer.'.red);
-        if(offer.state === TradeOfferManager.ETradeOfferState.Canceled) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer was canceled by sender.'.red);
-        if(offer.state === TradeOfferManager.ETradeOfferState.Invalid) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now invalid.'.yellow);
-        if(offer.state === TradeOfferManager.ETradeOfferState.InvalidItems) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer now contains invalid items.'.yellow);
-        if(offer.state === TradeOfferManager.ETradeOfferState.Expired) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer expired.'.red);
-        if(offer.state === TradeOfferManager.ETradeOfferState.InEscrow) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now in escrow, you will most likely receive your item(s) in some days if no further action is taken.'.green);
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Declined) print(`${log(info)} (${offer.id.yellow})`+' You declined your incoming offer.'.red);
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Canceled) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer was canceled by sender.'.red);
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Invalid) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now invalid.'.yellow);
+        else if(offer.state === TradeOfferManager.ETradeOfferState.InvalidItems) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer now contains invalid items.'.yellow);
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Expired) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer expired.'.red);
+        else if(offer.state === TradeOfferManager.ETradeOfferState.InEscrow) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now in escrow, you will most likely receive your item(s) in some days if no further action is taken.'.green);
     }, 1000)
 })
 
@@ -172,18 +160,4 @@ function verify() {
     })
 }
 
-function checkUpdate() {
-    const request = require('request');
-    var options = {
-        url: 'https://raw.githubusercontent.com/offish/auto-accept-donations/master/package.json',
-        method: 'GET',
-    };
-    function look(error, JSONresponse, body) {
-        var page = JSON.parse(body)
-        if(page.version != package.version)
-            print(`${log('warn')} ${'New update available for '+package.name+ ' v'+page.version+'! You\'re currently only running version '+package.version+''}\n${`${log('info')} Go to http://github.com/confernn/auto-accept-donations to update now!`}`)
-        else 
-            print(`${log('info')} You're running the latest version of auto-accept-donations (v${package.version})`)
-    }
-    request(options, look)
-}
+auto.check()
