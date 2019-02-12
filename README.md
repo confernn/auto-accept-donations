@@ -7,6 +7,7 @@
 [![Discord](https://img.shields.io/discord/467040686982692865.svg)](https://discord.gg/t8nHSvA)
 
 **BEING REWORKED AS OF 2/12/2019, CHECK OUT THE BETA BRANCH FOR UPDATES**
+#
 **Free, secure and fast customizable script that automatically accepts donations on Steam with a lot of options.**
 
 #
