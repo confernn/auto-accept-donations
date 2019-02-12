@@ -31,10 +31,20 @@ self = module.exports = {
         return config.enable.blacklist == true;
     },
 
-    getOfferState: function(offer) {
-        let state = '';
-        offer.state
-    }
+    acceptFriends: function() {
+        return config.friends.auto_accept == true;
+    },
+
+    highEnoughLevel: function(level) {
+        return level >= config.friends.minimum_level;
+    },
+
+    manageMessage: function(name) {
+        var message = config.friends.add_message;
+        if(message.indexOf('%') > -1)
+            return message.replace('%', name);
+        else return message;
+    },
 
     log: function(info) {
         return `${package.name} | `.green + `${moment().format('LTS')} `+
