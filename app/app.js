@@ -49,29 +49,31 @@ client.on('loggedOn', (details, parental) => {
 });
 
 client.on('friendRelationship', (steamID, relationship) => {
-    if(config.optional.friends.autoAccept) {
+    if(auto.acceptFriends()) {
         if(relationship == 2) {
             info = 'info';
             client.getPersonas([steamID], (personas) => {
-                const path = config.optional.friends;
                 var persona = personas[steamID.getSteamID64()];
                 var name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
+                
                 client.getSteamLevels([steamID], function(results) {
-                    if(results[steamID.getSteamID64()] >= config.optional.friends.requiredLevel) {
+                    var level = results[steamID.getSteamID64()]
+
+                    if(auto.highEnoughLevel(level)) {
+
                         client.addFriend(steamID);
-                        print(`${log(info)} I'm now friends with ${name}, their level: ${results[steamID.getSteamID64()]}`);
-                        if(path.welcomeMessage) {
-                            if(path.welcomeMessage.indexOf('%name%') > -1) {
-                                client.chatMessage(steamID, path.welcomeMessage.replace('%name%', name));
-                            }
-                            else                            
-                                client.chatMessage(steamID, path.welcomeMessage);
+                        print(`${log(info)} I'm now friends with ${name}, their level: ${level}`);
+                        
+                        if(config.friends.add_message) {
+                            var chat = auto.manageMessage(name)
                             
-                            print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage.replace('%name%', name)}`);
+                            client.chatMessage(steamID, chat);
+                            print(`${log(info)} I sent a welcome message to ${name.yellow}: ${chat}`);
                         }
-                    } 
+                    }
+
                     else
-                        print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
+                        print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${level}`);
                 });
             });
         }
@@ -110,39 +112,54 @@ manager.on('newOffer', (offer) => {
 // If offer changed it's state; do something
 manager.on('receivedOfferChanged', (offer, oldState) => {
     setTimeout(() => {
+        var id = offer.id;
         info = 'trade';
+
         if(offer.state === TradeOfferManager.ETradeOfferState.Accepted) {
             print(`${log(info)} (${offer.id.yellow})`+' Incoming offer went through successfully.'.green);
             if(auto.isDonation(offer)) {
                 let id64 = offer.partner.getSteamID64();
                 let id3 = offer.partner.getSteam3RenderedID();
-                if(auto.messagesEnabled()) {
+                
+                if(auto.messagesEnabled()) 
                     client.chatMessage(id3, config.optional.message);
-                }
+                
+                
                 if(auto.inviteEnabled()) {
                     client.addFriend(id3)
                     community.inviteUserToGroup(id3, config.optional.groupID);
                 }
+
                 if(auto.enableComments()) {
                     if(auto.blacklistEnabled()) {
-                        if(auto.isBlacklisted(id64)) 
-                            print(`${log('info')} (${offer.id.yellow})`+' Incoming offer partner is listed in blacklist, not leaving a comment.'.yellow);
+
+                        if(auto.isBlacklisted(id64))
+                            print(`${log('info')} (${id.yellow})`+' Incoming offer partner is listed in blacklist, not leaving a comment.'.yellow);
+                        
                         else
-                            print(`${log('info')} (${offer.id.yellow}) Incoming offer partner is not listed blacklist, trying to leave a comment.`);
+                            print(`${log('info')} (${id.yellow}) Incoming offer partner is not listed blacklist, trying to leave a comment.`);
                     
                     }
+
                     community.postUserComment(id3, config.optional.comment)
                 }
+                
                 else if(!auto.commentsEnabled()) 
                     print(`${log('info')}`+' Comments are disabled, not leaving a comment.'.green);
             }
         }
-        else if(offer.state === TradeOfferManager.ETradeOfferState.Declined) print(`${log(info)} (${offer.id.yellow})`+' You declined your incoming offer.'.red);
-        else if(offer.state === TradeOfferManager.ETradeOfferState.Canceled) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer was canceled by sender.'.red);
-        else if(offer.state === TradeOfferManager.ETradeOfferState.Invalid) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now invalid.'.yellow);
-        else if(offer.state === TradeOfferManager.ETradeOfferState.InvalidItems) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer now contains invalid items.'.yellow);
-        else if(offer.state === TradeOfferManager.ETradeOfferState.Expired) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer expired.'.red);
-        else if(offer.state === TradeOfferManager.ETradeOfferState.InEscrow) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now in escrow, you will most likely receive your item(s) in some days if no further action is taken.'.green);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Declined) print(`${log(info)} (${id.yellow})`+' You declined your incoming offer.'.red);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Canceled) print(`${log(info)} (${id.yellow})`+' Incoming offer was canceled by sender.'.red);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Invalid) print(`${log(info)} (${id.yellow})`+' Incoming offer is now invalid.'.yellow);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.InvalidItems) print(`${log(info)} (${id.yellow})`+' Incoming offer now contains invalid items.'.yellow);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Expired) print(`${log(info)} (${id.yellow})`+' Incoming offer expired.'.red);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.InEscrow) print(`${log(info)} (${id.yellow})`+' Incoming offer is now in escrow, you will most likely receive your item(s) in some days if no further action is taken.'.green);
     }, 1000)
 })
 
