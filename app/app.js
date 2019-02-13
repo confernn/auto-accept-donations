@@ -1,6 +1,6 @@
 /* 
-Script developed and maintained by confern
-Running an old version of the script? Updates can be found here: https://github.com/offish/auto-accept-donations
+    Script developed and maintained by offish
+    Running an old version of the script? Updates can be found here: https://github.com/offish/auto-accept-donations
 */
 
 const TradeOfferManager = require('steam-tradeoffer-manager')
