@@ -1,4 +1,4 @@
-/**
+/*
     DO NOT EDIT ANYTHING HERE, UNLESS YOU KNOW WHAT YOU'RE DOING.
 */
 const blacklist = require('./blacklist.json');
@@ -51,6 +51,13 @@ self = module.exports = {
         `${info == "info" ? info.green : ""+info == "trade" ? info.magenta : ""+info == "warn" ? info.yellow : ""}:`
     },
 
+    console: function(info, text, color, replace=false, replacement) {
+        if(!replace)
+            console.log(`${self.log(info)} ${text}`)
+        else 
+            console.log(`${self.log(info)} ${text.replace(replacement)}`)
+    },
+
     start: function(name) {
         var info = 'info';
         console.log(`\003c`)
@@ -62,8 +69,7 @@ self = module.exports = {
         let games = [config.other.game]
         if(config.other.game)
             return games.append(package.name);
-        else
-            return package.name
+        else return package.name
     },
 
     check: function() {
