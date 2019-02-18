@@ -5,8 +5,9 @@ const blacklist = require('./blacklist.json');
 const package = require('./../package.json');
 const config = require('./config');
 const colors = require('colors');
+const moment = require('moment');
 
-self = module.exports = {
+t = module.exports = {
     isDonation: function(offer) {
         return offer.itemsToGive.length === 0 && offer.itemsToReceive.length > 0;
     },
@@ -53,16 +54,14 @@ self = module.exports = {
 
     console: function(info, text, color, replace=false, replacement) {
         if(!replace)
-            console.log(`${self.log(info)} ${text}`)
+            console.log(`${t.log(info)} ${text}`)
         else 
-            console.log(`${self.log(info)} ${text.replace(replacement)}`)
+            console.log(`${t.log(info)} ${text.replace(replacement)}`)
     },
 
     start: function(name) {
         var info = 'info';
-        console.log(`\003c`)
-        console.log(`${self.log(info)} You're currently running ${package.name} on version ${package.version.green}`)
-        console.log(`${log(info)} Logged into Steam as ${name.green}`)
+        console.log(`${t.log(info)} Logged into Steam as ${name.green}`);
     },
 
     games: function() {
@@ -82,9 +81,9 @@ self = module.exports = {
             var page = JSON.parse(body)
             const v = package.version;
             if(page.version != v)
-                console.log(`${self.log('warn')} ${'New update available for '+package.name+ ' v'+v+'! You\'re currently only running version '+v+''}\n${`${log('info')} Go to http://github.com/offish/auto-accept-donations to update now!`}`)
+                console.log(`${t.log('warn')} ${'New update available for '+package.name+ ' v'+v+'! You\'re currently only running version '+v.green+''}\n${`${log('info')} Go to http://github.com/offish/auto-accept-donations to update now!`}`)
             else 
-                console.log(`${self.log('info')} You're running the latest version of auto-accept-donations (v${v})`)
+                console.log(`${t.log('info')} You're running the latest version of auto-accept-donations (v${v.green})`)
         }
         request(options, look)
     }
