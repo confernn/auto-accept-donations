@@ -1,18 +1,16 @@
 /* 
-Script developed and maintained by confern
-Running an old version of the script? Updates can be found here: https://github.com/offish/auto-accept-donations
+    Script developed and maintained by offish
+    Running an old version of the script? Updates can be found here: https://github.com/offish/auto-accept-donations
 */
 
 const TradeOfferManager = require('steam-tradeoffer-manager')
 const SteamCommunity = require('steamcommunity');
 const SteamUser = require('steam-user');
 const SteamTotp = require('steam-totp');
+const config = require('./config');
+const auto = require('./methods');
 const moment = require('moment');
 const colors = require('colors');
-
-const blacklist = require('./blacklist.json');
-const package = require('./../package.json');
-const config = require('./config.json');
 const print = console.log;
 
 let info;
@@ -25,61 +23,51 @@ const manager = new TradeOfferManager({
     language: 'en'
 });
 
-moment.locale(config.optional.clock);
+moment.locale(config.other.clock);
 
-const logOnOptions = {
-    accountName: config.account.username,
-    password: config.account.password,
-    twoFactorCode: SteamTotp.generateAuthCode(config.optional.sharedSecret)
+const settings = {
+    accountName: config.bot.username,
+    password: config.bot.password,
+    twoFactorCode: SteamTotp.generateAuthCode(config.bot.shared_secret)
 };
 
-client.logOn(logOnOptions);
+client.logOn(settings);
 
-function log(info) {
-    return `${package.name} | `.green + `${moment().format('LTS')} `+
-    `${info == "info" ? info.green : ""+info == "trade" ? info.magenta : ""+info == "warn" ? info.yellow : ""}:`
-}
 
-// When user has logged on, log and check if he/she is in the group he/she wants to invite to
 client.on('loggedOn', (details, parental) => {
     client.getPersonas([client.steamID], (personas) => {
-        info = 'info';
-        print('\033c');
-        print(`${log(info)} You're currently running ${package.name} on version ${package.version.green}`);
-        print(`${log(info)} Logged into Steam as ${personas[client.steamID].player_name.green}`);
-        client.setPersona(SteamUser.Steam.EPersonaState.Online);
-        if(config.optional.game)
-            client.gamesPlayed(config.optional.game);
-        else
-            client.gamesPlayed(package.name);
-        setTimeout(verify, 1000);
+        auto.start(personas[client.steamID].player_name)
+        client.gamesPlayed(auto.games());
+        setTimeout(verify, 10000);
     });
 });
 
 client.on('friendRelationship', (steamID, relationship) => {
-    if(config.optional.friends.autoAccept) {
+    if(auto.acceptFriends()) {
         if(relationship == 2) {
             info = 'info';
             client.getPersonas([steamID], (personas) => {
-                const path = config.optional.friends;
                 var persona = personas[steamID.getSteamID64()];
                 var name = persona ? persona.player_name : (`['${steamID.getSteamID64()}']`);
+                
                 client.getSteamLevels([steamID], function(results) {
-                    if(results[steamID.getSteamID64()] >= config.optional.friends.requiredLevel) {
+                    var level = results[steamID.getSteamID64()]
+
+                    if(auto.highEnoughLevel(level)) {
+
                         client.addFriend(steamID);
-                        print(`${log(info)} I'm now friends with ${name}, their level: ${results[steamID.getSteamID64()]}`);
-                        if(path.welcomeMessage) {
-                            if(path.welcomeMessage.indexOf('%name%') > -1) {
-                                client.chatMessage(steamID, path.welcomeMessage.replace('%name%', name));
-                            }
-                            else                            
-                                client.chatMessage(steamID, path.welcomeMessage);
+                        print(`${auto.log(info)} I'm now friends with ${name}, their level: ${level}`);
+                        
+                        if(config.friends.add_message) {
+                            var chat = auto.manageMessage(name)
                             
-                            print(`${log(info)} I sent a welcome message to ${name.yellow}: ${path.welcomeMessage.replace('%name%', name)}`);
+                            client.chatMessage(steamID, chat);
+                            print(`${auto.log(info)} I sent a welcome message to ${name.yellow}: "${chat}"`);
                         }
-                    } 
+                    }
+
                     else
-                        print(`${log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${results[steamID.getSteamID64()]}`);
+                        print(`${auto.log(info)} ${name.yellow} sent a friend request, not adding user since his/her level is only ${level}`);
                 });
             });
         }
@@ -95,95 +83,91 @@ client.on('webSession', (sessionid, cookies) => {
 function accept(offer) {
     offer.accept((err) => {
         if(err) {
-            print(`${log('warn')} (${offer.id.yellow}) Error while trying to accept donation. ${err.red}`);
+            print(`${auto.log('warn')} (${offer.id.yellow}) Error while trying to accept donation. ${err.red}`);
         }
-        print(`${log('trade')} (${offer.id.yellow}) Trying to accept incoming donation.`);
+        print(`${auto.log('trade')} (${offer.id.yellow}) Trying to accept incoming donation.`);
     })
 }
 
-// Function that processes the offer, if the offer is a donation; accept it, else log it in console
+// Function that processes the offer, if the offer is a donation; accept it, else auto.log it in console
 function process(offer) {
-    if(offer.itemsToGive.length === 0 && offer.itemsToReceive.length > 0) 
+    if(auto.isDonation(offer)) 
         accept(offer);
     else
-        print(`${log('trade')} (${offer.id.yellow})`+' Incoming offer is not a donation, offer ignored.'.yellow);
+        print(`${auto.log('trade')} (${offer.id.yellow})`+' Incoming offer is not a donation, offer ignored.'.yellow);
 }
 
 // If a new offer is received; proccess it 
 manager.on('newOffer', (offer) => {
-    print(`\n${log('trade')} (${offer.id.yellow}) We recieved a new offer. Trade is being sent by ${offer.partner.getSteamID64().yellow}`);
+    print(`\n${auto.log('trade')} (${offer.id.yellow}) We recieved a new offer. Trade is being sent by ${offer.partner.getSteamID64().yellow}`);
     process(offer);
 });
 
 // If offer changed it's state; do something
 manager.on('receivedOfferChanged', (offer, oldState) => {
     setTimeout(() => {
+        var id = offer.id;
+        info = 'trade';
+
         if(offer.state === TradeOfferManager.ETradeOfferState.Accepted) {
-            print(`${log('trade')} (${offer.id.yellow})`+' Incoming offer went through successfully.'.green);
-            if(offer.itemsToGive.length === 0) {
-                if(config.optional.enableMessages) {
-                    client.chatMessage(offer.partner.getSteam3RenderedID(), config.optional.message);
+            print(`${auto.log(info)} (${offer.id.yellow})`+' Incoming offer went through successfully.'.green);
+            if(auto.isDonation(offer)) {
+                let id64 = offer.partner.getSteamID64();
+                let id3 = offer.partner.getSteam3RenderedID();
+                
+                if(auto.messagesEnabled()) 
+                    client.chatMessage(id3, config.other.message);
+                
+                
+                if(auto.inviteEnabled()) {
+                    client.addFriend(id3)
+                    community.inviteUserToGroup(id3, config.group.id);
                 }
-                if(config.optional.enableComments) {
-                    if(config.optional.enableBlacklist) {
-                        if(blacklist.includes(Number(offer.partner.getSteamID64()))) 
-                            print(`${log('info')} (${offer.id.yellow})`+' Incoming offer partner is listed in blacklist, not leaving a comment.'.yellow);
-                        else {
-                            print(`${log('info')} (${offer.id.yellow}) Incoming offer partner is not listed blacklist, trying to leave a comment.`);
-                            community.postUserComment(offer.partner.getSteam3RenderedID(), config.optional.comment);
-                        }
-                    } 
-                    else 
-                        community.postUserComment(offer.partner.getSteam3RenderedID(), config.optional.comment);
-                }
-                if(config.optional.inviteToGroup) {
-                    client.addFriend(offer.partner.getSteam3RenderedID()); {
-                        if(config.optional.groupID > 0) {
-                            community.inviteUserToGroup(offer.partner.getSteam3RenderedID(), config.optional.groupID);
-                        }
+
+                if(auto.commentsEnabled()) {
+                    if(auto.blacklistEnabled()) {
+
+                        if(auto.isBlacklisted(id64))
+                            print(`${auto.log('info')} (${id.yellow})`+' Incoming offer partner is blacklisted, not leaving a comment.'.yellow);
+                        
+                        else
+                            print(`${auto.log('info')} (${id.yellow}) Incoming offer partner is not blacklisted, trying to leave a comment.`);
+                    
                     }
+
+                    community.postUserComment(id3, config.other.comment)
                 }
-                if(!config.optional.enableComments) {
-                    print(`${log('info')}`+' Comments are disabled, not leaving a comment.'.green);
-                }
+                
+                else if(!auto.commentsEnabled()) 
+                    print(`${auto.log('info')}`+' Comments are disabled, not leaving a comment.'.green);
             }
         }
-        info = 'trade';
-        if(offer.state === TradeOfferManager.ETradeOfferState.Declined) print(`${log(info)} (${offer.id.yellow})`+' You declined your incoming offer.'.red);
-        if(offer.state === TradeOfferManager.ETradeOfferState.Canceled) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer was canceled by sender.'.red);
-        if(offer.state === TradeOfferManager.ETradeOfferState.Invalid) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now invalid.'.yellow);
-        if(offer.state === TradeOfferManager.ETradeOfferState.InvalidItems) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer now contains invalid items.'.yellow);
-        if(offer.state === TradeOfferManager.ETradeOfferState.Expired) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer expired.'.red);
-        if(offer.state === TradeOfferManager.ETradeOfferState.InEscrow) print(`${log(info)} (${offer.id.yellow})`+' Incoming offer is now in escrow, you will most likely receive your item(s) in some days if no further action is taken.'.green);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Declined) print(`${auto.log(info)} (${id.yellow})`+' You declined your incoming offer.'.red);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Canceled) print(`${auto.log(info)} (${id.yellow})`+' Incoming offer was canceled by sender.'.red);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Invalid) print(`${auto.log(info)} (${id.yellow})`+' Incoming offer is now invalid.'.yellow);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.InvalidItems) print(`${auto.log(info)} (${id.yellow})`+' Incoming offer now contains invalid items.'.yellow);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.Expired) print(`${auto.log(info)} (${id.yellow})`+' Incoming offer expired.'.red);
+        
+        else if(offer.state === TradeOfferManager.ETradeOfferState.InEscrow) print(`${auto.log(info)} (${id.yellow})`+' Incoming offer is now in escrow, you will most likely receive your item(s) in some days if no further action is taken.'.green);
     }, 1000)
 })
 
 // Function that verifies that the user is in the group he/she wants to invite to
 function verify() {
-    if(config.optional.groupURL)
-        community.getSteamGroup(config.optional.groupURL, (err, group) => {
+    if(config.group.url)
+        community.getSteamGroup(config.group.url, (err, group) => {
             if(!err)
-                group.join();    
+                group.join();
     })
     community.getSteamGroup('blankllc', (err, group) => {
         if(!err)
             group.join();
-            checkUpdate();
+            auto.check();
+            setTimeout(() => print(`${auto.log('info')} Waiting for offers...`), 2000);
     })
-}
-
-function checkUpdate() {
-    const request = require('request');
-    var options = {
-        url: 'https://raw.githubusercontent.com/offish/auto-accept-donations/master/package.json',
-        method: 'GET',
-    };
-    function look(error, JSONresponse, body) {
-        var page = JSON.parse(body)
-        if(page.version != package.version)
-            print(`${log('warn')} ${'New update available for '+package.name+ ' v'+page.version+'! You\'re currently only running version '+package.version+''}\n${`${log('info')} Go to http://github.com/confernn/auto-accept-donations to update now!`}`)
-        else 
-            print(`${log('info')} You're running the latest version of auto-accept-donations (v${package.version})`)
-    }
-    request(options, look)
-}
+};

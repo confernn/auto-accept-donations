@@ -1,7 +1,7 @@
 {
     "name": "auto-accept-donations",
-    "version": "1.1.31",
-    "description": "Secure, free and fast customizable script that automatically accepts donations on Steam.",
+    "version": "1.2.01",
+    "description": "Automatically accept donations and orders on Steam.",
     "main": "index.js",
     "dependencies": {
       "steam-totp": "^2.0.1",
@@ -12,8 +12,8 @@
       "colors": "^1.3.0"
     },
     "author": {
-      "name": "confern",
-      "url": "https://steamcommunity.com/id/confern/"
+      "name": "offish",
+      "url": "https://github.com/offish/"
     },
     "license": "MIT"
 }
