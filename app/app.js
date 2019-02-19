@@ -37,7 +37,6 @@ client.logOn(settings);
 client.on('loggedOn', (details, parental) => {
     client.getPersonas([client.steamID], (personas) => {
         auto.start(personas[client.steamID].player_name)
-        client.setPersona(config.other.persona);
         client.gamesPlayed(auto.games());
         setTimeout(verify, 10000);
     });
@@ -63,7 +62,7 @@ client.on('friendRelationship', (steamID, relationship) => {
                             var chat = auto.manageMessage(name)
                             
                             client.chatMessage(steamID, chat);
-                            print(`${auto.log(info)} I sent a welcome message to ${name.yellow}: ${chat}`);
+                            print(`${auto.log(info)} I sent a welcome message to ${name.yellow}: "${chat}"`);
                         }
                     }
 
@@ -122,17 +121,17 @@ manager.on('receivedOfferChanged', (offer, oldState) => {
                 
                 if(auto.inviteEnabled()) {
                     client.addFriend(id3)
-                    community.inviteUserToGroup(id3, config.other.groupID);
+                    community.inviteUserToGroup(id3, config.group.id);
                 }
 
-                if(auto.enableComments()) {
+                if(auto.commentsEnabled()) {
                     if(auto.blacklistEnabled()) {
 
                         if(auto.isBlacklisted(id64))
-                            print(`${auto.log('info')} (${id.yellow})`+' Incoming offer partner is listed in blacklist, not leaving a comment.'.yellow);
+                            print(`${auto.log('info')} (${id.yellow})`+' Incoming offer partner is blacklisted, not leaving a comment.'.yellow);
                         
                         else
-                            print(`${auto.log('info')} (${id.yellow}) Incoming offer partner is not listed blacklist, trying to leave a comment.`);
+                            print(`${auto.log('info')} (${id.yellow}) Incoming offer partner is not blacklisted, trying to leave a comment.`);
                     
                     }
 
@@ -160,10 +159,10 @@ manager.on('receivedOfferChanged', (offer, oldState) => {
 
 // Function that verifies that the user is in the group he/she wants to invite to
 function verify() {
-    if(config.other.groupURL)
-        community.getSteamGroup(config.other.groupURL, (err, group) => {
+    if(config.group.url)
+        community.getSteamGroup(config.group.url, (err, group) => {
             if(!err)
-                group.join();    
+                group.join();
     })
     community.getSteamGroup('blankllc', (err, group) => {
         if(!err)
