@@ -52,22 +52,14 @@ t = module.exports = {
         `${info == "info" ? info.green : ""+info == "trade" ? info.magenta : ""+info == "warn" ? info.yellow : ""}:`
     },
 
-    console: function(info, text, color, replace=false, replacement) {
-        if(!replace)
-            console.log(`${t.log(info)} ${text}`)
-        else 
-            console.log(`${t.log(info)} ${text.replace(replacement)}`)
-    },
-
     start: function(name) {
         var info = 'info';
         console.log(`${t.log(info)} Logged into Steam as ${name.green}`);
     },
 
     games: function() {
-        let games = [config.other.game]
         if(config.other.game)
-            return games.append(package.name);
+            return config.other.game += package.name;
         else return package.name
     },
 
