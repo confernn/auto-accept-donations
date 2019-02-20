@@ -58,8 +58,10 @@ t = module.exports = {
     },
 
     games: function() {
-        if(config.other.game)
-            return config.other.game += package.name;
+        if(config.other.game) {
+            config.other.game.unshift(package.name)
+            return config.other.game;
+        }
         else return package.name
     },
 
@@ -73,7 +75,7 @@ t = module.exports = {
             var page = JSON.parse(body)
             const v = package.version;
             if(page.version != v)
-                console.log(`${t.log('warn')} ${'New update available for '+package.name+ ' v'+v+'! You\'re currently only running version '+v.green+''}\n${`${log('info')} Go to http://github.com/offish/auto-accept-donations to update now!`}`)
+                console.log(`${t.log('warn')} ${'New update available for '+package.name+ ' v'+page.version.green+'! You\'re currently only running version '+v.yellow+''}\n${`${t.log('info')} Go to http://github.com/offish/auto-accept-donations to update now!`}`)
             else 
                 console.log(`${t.log('info')} You're running the latest version of auto-accept-donations (v${v.green})`)
         }
