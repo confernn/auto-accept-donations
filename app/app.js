@@ -33,10 +33,10 @@ const settings = {
 
 client.logOn(settings);
 
-
 client.on('loggedOn', (details, parental) => {
     client.getPersonas([client.steamID], (personas) => {
-        auto.start(personas[client.steamID].player_name)
+        auto.start(personas[client.steamID].player_name);
+        client.setPersona(SteamUser.Steam.EPersonaState[config.other.persona]);
         client.gamesPlayed(auto.games());
         setTimeout(verify, 10000);
     });
@@ -117,7 +117,6 @@ manager.on('receivedOfferChanged', (offer, oldState) => {
                 
                 if(auto.messagesEnabled()) 
                     client.chatMessage(id3, config.other.message);
-                
                 
                 if(auto.inviteEnabled()) {
                     client.addFriend(id3)
