@@ -53,8 +53,7 @@ t = module.exports = {
     },
 
     start: function(name) {
-        var info = 'info';
-        console.log(`${t.log(info)} Logged into Steam as ${name.green}`);
+        console.log(`${t.log('info')} Logged into Steam as ${name.green}`);
     },
 
     games: function() {
