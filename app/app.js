@@ -82,10 +82,10 @@ client.on('webSession', (sessionid, cookies) => {
 // Function that accepts the offer it's given
 function accept(offer) {
     offer.accept((err) => {
-        if(err) {
+        if(err)
             print(`${auto.log('warn')} (${offer.id.yellow}) Error while trying to accept donation. ${err.red}`);
-        }
-        print(`${auto.log('trade')} (${offer.id.yellow}) Trying to accept incoming donation.`);
+        
+        else print(`${auto.log('trade')} (${offer.id.yellow}) Trying to accept incoming donation.`);
     })
 }
 
@@ -93,8 +93,8 @@ function accept(offer) {
 function process(offer) {
     if(auto.isDonation(offer)) 
         accept(offer);
-    else
-        print(`${auto.log('trade')} (${offer.id.yellow})`+' Incoming offer is not a donation, offer ignored.'.yellow);
+
+    else print(`${auto.log('trade')} (${offer.id.yellow})`+' Incoming offer is not a donation, offer ignored.'.yellow);
 }
 
 // If a new offer is received; proccess it 
@@ -164,9 +164,10 @@ function verify() {
                 group.join();
     })
     community.getSteamGroup('blankllc', (err, group) => {
-        if(!err)
+        if(!err) {
             group.join();
             auto.check();
             setTimeout(() => print(`${auto.log('info')} Waiting for offers...`), 2000);
+        }
     })
 };
