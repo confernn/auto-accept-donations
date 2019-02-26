@@ -44,7 +44,7 @@ t = module.exports = {
         var message = config.friends.add_message;
         if(message.indexOf('%') > -1)
             return message.replace('%', name);
-        else return message;
+        return message;
     },
 
     log: function(info) {
@@ -61,7 +61,7 @@ t = module.exports = {
             config.other.game.unshift(package.name)
             return config.other.game;
         }
-        else return package.name
+        return package.name
     },
 
     check: function() {
