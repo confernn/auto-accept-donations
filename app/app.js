@@ -35,7 +35,7 @@ client.logOn(settings);
 
 client.on('loggedOn', (details, parental) => {
     client.getPersonas([client.steamID], (personas) => {
-        auto.start(personas[client.steamID].player_name);
+        print(`${t.log('info')} Logged into Steam as ${personas[client.steamID].player_name.green}`);
         client.setPersona(SteamUser.Steam.EPersonaState[config.other.persona]);
         client.gamesPlayed(auto.games());
         setTimeout(verify, 10000);
