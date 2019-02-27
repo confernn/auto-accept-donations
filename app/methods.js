@@ -52,10 +52,6 @@ t = module.exports = {
         `${info == "info" ? info.green : ""+info == "trade" ? info.magenta : ""+info == "warn" ? info.yellow : ""}:`
     },
 
-    start: function(name) {
-        console.log(`${t.log('info')} Logged into Steam as ${name.green}`);
-    },
-
     games: function() {
         if(config.other.game) {
             config.other.game.unshift(package.name)
